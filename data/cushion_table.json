@@ -1,0 +1,77 @@
+{
+  "_comment": "Смерть/вывод из строя моба идёт НЕ через общий 'хп-бар', а через 18 независимых подушек (9 осей x 2 знака — matter.density/cohesion/plasticity, info.order/agency/meaning_density, energy.charge/carrier/amplitude; spacetime вне пула, см. README). МОДЕЛЬ ОБЩЕГО ПУЛА: формулы ниже считают не абсолютный порог, а СЫРОЙ ВЕС каждой подушки. Все 18 весов делятся на total_resist_pool пропорционально — раскачать одну значит забрать вес у остальных 17. ВАЖНО: contributors теперь АСИММЕТРИЧНЫ по знаку через поле 'affects' (plus/minus/both) — раньше все были 'both' по умолчанию, из-за чего плюсовая и минусовая подушка одной оси были идентичны, что было замечено как баг логики (сплав в монолит и рассыпание на куски — явно разные механизмы, нет причин, чтобы одни и те же contributors одинаково защищали от обоих).",
+
+  "total_resist_pool": 6.3,
+  "pool_min_threshold": 0.10,
+  "pool_max_threshold": 1.30,
+
+  "defaults": {
+    "_affects": "Базовые веса для ЛЮБОЙ оси, если явно не переопределены ниже в 'axes'. Это НЕ итоговый порог — это стартовая 'заявка' на долю пула, до нормализации.",
+    "base_threshold": 0.35,
+    "self_reinforce": 0.12
+  },
+
+  "axes": {
+    "matter.density": {
+      "_affects": "plus=раздавить в точку, minus=дематериализовать. cohesion и order защищают конкретно от РАССЕИВАНИЯ (minus) — держат материю собранной; plasticity защищает конкретно от РАЗДАВЛИВАНИЯ (plus) — упругое пружинит под прессом, хрупкое трескается. charge остаётся 'both' — заряженная материя в принципе более летучая структура, независимо от направления.",
+      "base_threshold": 0.32,
+      "contributors": [
+        {"source": "matter.cohesion", "mode": "additive", "weight": 0.30, "transform": "signed", "affects": "minus", "note": "спаянное тело сопротивляется рассеиванию; рыхлое — расточается легче"},
+        {"source": "energy.charge", "mode": "multiplicative", "weight": -0.30, "transform": "signed", "affects": "both", "note": "заряженная материя структурно более хрупкая в принципе, в обе стороны"},
+        {"source": "matter.plasticity", "mode": "additive", "weight": -0.25, "transform": "signed", "affects": "plus", "note": "хрупкое (+plasticity) легче расколоть под прессом; упругое (-plasticity) пружинит и держит форму под давлением"},
+        {"source": "info.order", "mode": "additive", "weight": 0.20, "transform": "signed", "affects": "minus", "note": "упорядоченная/кристаллическая структура сопротивляется именно рассеиванию"}
+      ]
+    },
+    "matter.cohesion": {
+      "_affects": "plus=пересращение в монолит, minus=декогезия/распад. plasticity и order защищают конкретно от РАСПАДА (minus); density (масштаб) критичен для ОБЕИХ сторон — и крупному труднее пересростись равномерно, и его же тяжелее удержать целым при распаде.",
+      "base_threshold": 0.35,
+      "contributors": [
+        {"source": "matter.density", "mode": "multiplicative", "weight": 0.25, "transform": "abs", "affects": "both", "note": "чем крупнее/массивнее тело, тем критичнее для него именно связность"},
+        {"source": "matter.plasticity", "mode": "additive", "weight": -0.20, "transform": "signed", "affects": "minus", "note": "хрупкое рвётся на куски легче; упругое лучше держит связи под нагрузкой"},
+        {"source": "info.order", "mode": "additive", "weight": 0.25, "transform": "signed", "affects": "minus", "note": "упорядоченное/кристаллическое связывание сопротивляется именно распаду"}
+      ]
+    },
+    "matter.plasticity": {
+      "base_threshold": 0.32,
+      "contributors": []
+    },
+    "info.order": {
+      "_affects": "plus=гипер-ригидность, minus=хаос/безумие. agency защищает конкретно от БЕЗУМИЯ (minus) — оригинальная формулировка была именно про разрушение структуры мышления, не про ригидность.",
+      "base_threshold": 0.35,
+      "contributors": [
+        {"source": "info.agency", "mode": "additive", "weight": 0.20, "transform": "abs", "affects": "minus", "note": "чем осознаннее существо, тем болезненнее для него именно разрушение структуры мышления (хаос)"}
+      ]
+    },
+    "info.agency": {
+      "_affects": "plus=рекурсивный обвал самосознания, minus=паралич воли. ЗДЕСЬ order работает в РАЗНЫЕ СТОРОНЫ на разных знаках: упорядоченный ум легче держит волю под давлением (защищает minus), НО тот же порядок/логичность делает саморефлексию глубже и опаснее (сужает plus) — не инвариант, а осознанный дизайн-выбор, можно оспорить.",
+      "base_threshold": 0.32,
+      "contributors": [
+        {"source": "info.order", "mode": "additive", "weight": 0.15, "transform": "signed", "affects": "minus", "note": "упорядоченный ум легче держит волю в кулаке под давлением"},
+        {"source": "info.order", "mode": "additive", "weight": -0.15, "transform": "signed", "affects": "plus", "note": "но тот же порядок делает саморефлексию глубже и опаснее"}
+      ]
+    },
+    "info.meaning_density": {
+      "_affects": "ЧЕРНОВИК: добавлена в пул по вашей просьбе. Contributors пока не придумывал — не хотел гадать, какие оси должны защищать от 'свёртки в архетип' или 'забвения'.",
+      "base_threshold": 0.35,
+      "contributors": []
+    },
+    "energy.charge": {
+      "_affects": "plus=перегрузка/самоподрыв, minus=истощение/энергосмерть. carrier защищает конкретно от ПЕРЕГРУЗКИ (plus) — оригинальная идея была именно 'мана не взрывается от удара по лицу', про истощение (minus) carrier ничего не говорили, поэтому не трогаю.",
+      "base_threshold": 0.45,
+      "self_reinforce": 0.25,
+      "contributors": [
+        {"source": "energy.carrier", "mode": "multiplicative", "weight": 0.60, "transform": "signed", "affects": "plus", "note": "мана/биополе стабильнее грубой кинетической/гравитационной энергии — маг не взрывается от удара по лицу"}
+      ]
+    },
+    "energy.carrier": {
+      "_affects": "ЧЕРНОВИК: добавлена для полной симметрии, конкретных contributors пока не придумывал.",
+      "base_threshold": 0.35,
+      "contributors": []
+    },
+    "energy.amplitude": {
+      "_affects": "ЧЕРНОВИК: добавлена для полной симметрии, конкретных contributors пока не придумывал.",
+      "base_threshold": 0.35,
+      "contributors": []
+    }
+  }
+}
